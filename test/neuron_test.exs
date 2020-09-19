@@ -40,6 +40,22 @@ defmodule NeuronTest do
         end
       end
     end
+
+    test "query with map to append custom parameters" do
+      with_mock Connection.Http,
+        call: fn _body, _options ->
+          {:ok, %{body: ~s/{"data": {"users": []}}/, status_code: 200, headers: []}}
+        end do
+        Neuron.query(%{query: "{ users { name } }", foo: "bar"})
+
+        assert called(
+                Connection.Http.call(
+                  Jason.encode!(%{query: "{ users { name } }", foo: "bar", variables: %{}}),
+                  []
+                )
+              )
+      end
+    end
   end
 
   describe "query/2" do
