@@ -39,7 +39,7 @@ defmodule Neuron.Fragment do
   end
 
   @doc false
-  def insert_into_query(query_string) do
+  def insert_into_query(query_string) when is_binary(query_string) do
     stored_fragments = Store.get(:global, :fragments, []) ++ Store.get(:process, :fragments, [])
 
     fragments_to_add =
@@ -61,6 +61,10 @@ defmodule Neuron.Fragment do
     |> Enum.map(&elem(&1, 1))
     |> Enum.map(&elem(&1, 0))
     |> Enum.reduce(query_string, &"#{&1} \n #{&2}")
+  end
+
+  def insert_into_query(%{query: query_string} = params) do
+    Map.put(params, :query, insert_into_query(query_string))
   end
 
   defp find_in_query(query_string) do

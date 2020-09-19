@@ -87,13 +87,13 @@ defmodule Neuron do
 
   alias Neuron.{ConfigUtils, Fragment}
 
-  @spec query(query_string :: String.t(), variables :: map(), options :: keyword()) ::
+  @spec query(query :: String.t() | map(), variables :: map(), options :: keyword()) ::
           {:ok, Neuron.Response.t()}
           | {:error, Neuron.Response.t() | Neuron.JSONParseError.t() | HTTPoison.Error.t()}
-  def query(query_string, variables \\ %{}, options \\ []) do
+  def query(query, variables \\ %{}, options \\ []) do
     json_library = ConfigUtils.json_library(options)
 
-    query_string
+    query
     |> Fragment.insert_into_query()
     |> build_body()
     |> insert_variables(variables)
@@ -111,7 +111,9 @@ defmodule Neuron do
     connection_module.call(body, options)
   end
 
-  defp build_body(query_string), do: %{query: query_string}
+  defp build_body(query_string) when is_binary(query_string), do: %{query: query_string}
+
+  defp build_body(%{query: _query_string} = query), do: query
 
   defp insert_variables(body, variables) do
     Map.put(body, :variables, variables)
